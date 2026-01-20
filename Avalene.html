@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Avalene News</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap">
+  <style>
+    body {
+      background: #000; color: #0f0; font-family: 'Roboto Mono', monospace;
+      margin: 0; padding: 12px; font-size: 16px; line-height: 1.4;
+    }
+    .header { color: #fff; text-align: center; margin-bottom: 16px; }
+    .line { color: #333; }
+    .item { cursor: pointer; margin: 6px 0; }
+    .number { color: #f80; font-weight: bold; margin-right: 8px; }
+    .article { display: none; background: #000; color: #eee; padding: 16px; }
+    .bottom-bar div:hover { background: #333; padding: 4px 8px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="header">Avalene's App – 2026</div>
+  <div class="line">──────────────────────────────</div>
+
+  <div id="headlines"></div>
+
+  <div class="bottom-bar" style="margin-top: 20px; text-align: center; color: #0f0; font-weight: bold;">
+    <div style="display: inline-block; margin: 0 15px; cursor: pointer;" onclick="loadCategory('top')">TOP NIEUWS</div>
+    <div style="display: inline-block; margin: 0 15px; cursor: pointer;" onclick="loadCategory('entertainment')">CELEBRITIES</div>
+    <div style="display: inline-block; margin: 0 15px; cursor: pointer;" onclick="loadCategory('international')">INTERNATIONAAL</div>
+  </div>
+
+  <div id="article" class="article">
+    <button onclick="showHeadlines()">← BACK</button>
+    <h2 id="art-title"></h2>
+    <div id="art-content"></div>
+  </div>
+
+  <script>
+    let currentMode = 'top'; // 'top', 'entertainment', 'international'
+    const headlinesDiv = document.getElementById('headlines');
+    const articleDiv = document.getElementById('article');
+
+    async function loadNews() {
+      try {
+        let url = 'https://newsapi.org/v2/top-headlines?apiKey=08f6e8882a204261af7ef19be1f68aaa';
+
+        if (currentMode === 'top') {
+          url += '&country=us';
+        } else if (currentMode === 'entertainment') {
+          url += '&country=us&category=entertainment';
+        } else if (currentMode === 'international') {
+          // Geen country= → wereldwijd (vaak veel Engels/internationaal nieuws)
+          // Alternatief: &language=en  of &country=gb voor UK/internationaal zwaarder
+          // url += '&language=en';
+        }
+
+        const res = await fetch(url);
+        const data = await res.json();
+
+        headlinesDiv.innerHTML = '';
+        if (data.status === 'ok' && data.totalResults > 0) {
+          data.articles.slice(0, 12).forEach((art, i) => {
+            const num = String(i + 101).padStart(3, ' ');
+            const title = (art.title || '').slice(0, 60) + (art.title.length > 60 ? '...' : '');
+            const item = document.createElement('div');
+            item.className = 'item';
+            item.innerHTML = `<span class="number">${num}</span> ${title}`;
+            item.onclick = () => showArticle(art);
+            headlinesDiv.appendChild(item);
+          });
+        } else {
+          headlinesDiv.innerHTML = '<p style="color:yellow">Geen nieuws beschikbaar op dit moment.</p>';
+        }
+      } catch (e) {
+        headlinesDiv.innerHTML = '<p style="color:red">Fout bij laden: ' + e.message + '</p>';
+      }
+    }
+
+    function loadCategory(mode) {
+      currentMode = mode;
+      document.getElementById('article').style.display = 'none';
+      document.getElementById('headlines').style.display = 'block';
+      loadNews();
+    }
+
+    function showArticle(article) {
+      document.getElementById('headlines').style.display = 'none';
+      document.getElementById('art-title').textContent = article.title;
+      document.getElementById('art-content').innerHTML = `
+        <p><small>Bron: ${article.source.name} – ${new Date(article.publishedAt).toLocaleString('nl')}</small></p>
+        <p>${article.description || 'Geen beschrijving beschikbaar.'}</p>
+        <a href="${article.url}" target="_blank" style="color:#0f0">Volledig artikel →</a>
+      `;
+      articleDiv.style.display = 'block';
+    }
+
+    function showHeadlines() {
+      articleDiv.style.display = 'none';
+      document.getElementById('headlines').style.display = 'block';
+    }
+
+    // Start met top nieuws + refresh elke 15 min
+    loadNews();
+    setInterval(loadNews, 15 * 60 * 1000);
+  </script>
+</body>
+</html>
