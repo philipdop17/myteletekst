@@ -65,8 +65,14 @@
   }
   try {
     let url = 'https://newsapi.org/v2/top-headlines?country=us&apiKey=08f6e8882a204261af7ef19be1f68aaa';
-    if (currentMode === 'sports') url += '&category=sports';
-    if (currentMode === 'business') url += '&category=business';
+
+if (currentMode === 'sports') {
+  url += '&category=sports';
+} else if (currentMode === 'business') {
+  url += '&category=business';
+} else if (currentMode === 'general' || currentMode === 'top') {
+  url += '&category=general'; // optional – makes default more reliable
+}
 
     const res = await fetch(url);
     const data = await res.json();
