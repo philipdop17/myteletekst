@@ -99,7 +99,7 @@ if (currentMode === 'sports') {
   const weatherKey = '06bfbf1ad774458bfc7a0053d6b3ba3496';  // Your real key here – no comments after if it causes issues; // Replace!
   const url = `https://api.openweathermap.org/data/2.5/weather?q=Chicago,US&units=imperial&appid=${weatherKey}`;
   try {
-    const res = await fetch(url);
+    const res = await fetch('https://cors-anywhere.herokuapp.com/https://newsapi.org/v2/top-headlines?country=us&category=general&apiKey=08f6e8882a204261af7ef19be1f68aaa');;
     const data = await res.json();
     if (data.cod !== 200) throw new Error(data.message || 'Weather error');
 
