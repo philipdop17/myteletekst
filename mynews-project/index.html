@@ -76,8 +76,8 @@
           url += '&category=general'; // default - usually returns more results
         }
 
-        // Use Rob Wu's reliable CORS proxy
-        const proxyUrl = 'https://robwu.nl/cors-anywhere/' + url;
+        // Use the working CORS proxy from robwu.nl
+        const proxyUrl = 'https://cors-anywhere.robwu.nl/' + url;
         const res = await fetch(proxyUrl);
 
         if (!res.ok) {
