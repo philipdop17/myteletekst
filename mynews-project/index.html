@@ -2,23 +2,23 @@
 <html lang="nl">
 <head>
   <!-- PWA Manifest & Icons -->
-   <!-- TEMP TEST COMMENT - REMOVE LATER -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#00ff00">  <!-- Green for Teletekst vibe -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
-<link rel="apple-touch-icon" href="icon-192.png">  <!-- For iOS home screen -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00ff00">  <!-- Green for Teletekst vibe -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="apple-touch-icon" href="icon-192.png">  <!-- For iOS home screen -->
 
-<!-- Service Worker Registration -->
-<script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(reg => console.log('Service Worker registered!', reg))
-        .catch(err => console.log('Service Worker registration failed:', err));
-    });
-  }
-</script>
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(reg => console.log('Service Worker registered!', reg))
+          .catch(err => console.log('Service Worker registration failed:', err));
+      });
+    }
+  </script>
+
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>My News</title>
@@ -42,11 +42,11 @@
 
   <div id="headlines"></div>
 
-<div class="bottom-bar" style="margin-top: 20px; text-align: center; color: #0f0; font-weight: bold;">
-  <div style="display: inline-block; margin: 0 15px; cursor: pointer;" onclick="loadCategory('sports')">SPORTS</div>
-  <div style="display: inline-block; margin: 0 15px; cursor: pointer;" onclick="loadCategory('weather')">WEATHER CHICAGO </div>
-  <div style="display: inline-block; margin: 0 15px; cursor: pointer;" onclick="loadCategory('business')">FINANCE </div>
-</div>
+  <div class="bottom-bar" style="margin-top: 20px; text-align: center; color: #0f0; font-weight: bold;">
+    <div style="display: inline-block; margin: 0 15px; cursor: pointer;" onclick="loadCategory('sports')">SPORTS</div>
+    <div style="display: inline-block; margin: 0 15px; cursor: pointer;" onclick="loadCategory('weather')">WEATHER CHICAGO</div>
+    <div style="display: inline-block; margin: 0 15px; cursor: pointer;" onclick="loadCategory('business')">FINANCE</div>
+  </div>
 
   <div id="article" class="article">
     <button onclick="showHeadlines()">← BACK</button>
@@ -60,69 +60,84 @@
     const articleDiv = document.getElementById('article');
 
     async function loadNews() {
-  if (currentMode === 'weather') {
-    loadWeather();
-    return;
-  }
-  try {
-    let url = 'https://newsapi.org/v2/top-headlines?country=us&apiKey=08f6e8882a204261af7ef19be1f68aaa';
+      if (currentMode === 'weather') {
+        loadWeather();
+        return;
+      }
 
-if (currentMode === 'sports') {
-  url += '&category=sports';
-} else if (currentMode === 'business') {
-  url += '&category=business';
-} else if (currentMode === 'general' || currentMode === 'top') {
-  url += '&category=general'; // optional – makes default more reliable
-}
+      try {
+        let url = 'https://newsapi.org/v2/top-headlines?country=us&apiKey=08f6e8882a204261af7ef19be1f68aaa';
 
-    const res = await fetch('https://cors-anywhere.herokuapp.com/https://newsapi.org/v2/top-headlines?country=us&category=general&apiKey=08f6e8882a204261af7ef19be1f68aaa');
-    const data = await res.json();
+        if (currentMode === 'sports') {
+          url += '&category=sports';
+        } else if (currentMode === 'business') {
+          url += '&category=business';
+        } else {
+          url += '&category=general'; // default - usually returns more results
+        }
 
-    headlinesDiv.innerHTML = '';
-    if (data.status === 'ok' && data.totalResults > 0) {
-      data.articles.slice(0, 12).forEach((art, i) => {
-        const num = String(i + 101).padStart(3, ' ');
-        const title = (art.title || '').slice(0, 60) + (art.title.length > 60 ? '...' : '');
-        const item = document.createElement('div');
-        item.className = 'item';
-        item.innerHTML = `<span class="number">${num}</span> ${title}`;
-        item.onclick = () => showArticle(art);
-        headlinesDiv.appendChild(item);
-      });
-    } else {
-      headlinesDiv.innerHTML = '<p style="color:yellow">Geen nieuws beschikbaar op dit moment.</p>';
+        // Proxy to bypass CORS block on Vercel/production
+        const proxyUrl = 'https://cors-anywhere.herokuapp.com/' + url;
+        const res = await fetch(proxyUrl);
+
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        headlinesDiv.innerHTML = '';
+        if (data.status === 'ok' && data.totalResults > 0) {
+          data.articles.slice(0, 12).forEach((art, i) => {
+            const num = String(i + 101).padStart(3, ' ');
+            const title = (art.title || '').slice(0, 60) + (art.title.length > 60 ? '...' : '');
+            const item = document.createElement('div');
+            item.className = 'item';
+            item.innerHTML = `<span class="number">${num}</span> ${title}`;
+            item.onclick = () => showArticle(art);
+            headlinesDiv.appendChild(item);
+          });
+        } else {
+          headlinesDiv.innerHTML = '<p style="color:yellow">Geen nieuws beschikbaar op dit moment (probeer later of andere categorie).</p>';
+        }
+      } catch (e) {
+        headlinesDiv.innerHTML = '<p style="color:red">Fout bij laden: ' + e.message + '</p>';
+        console.error('News fetch error:', e);
+      }
     }
-  } catch (e) {
-    headlinesDiv.innerHTML = '<p style="color:red">Fout bij laden: ' + e.message + '</p>';
-  }
-}
-    async function loadWeather() {
-  const weatherKey = '06bfbf1ad774458bfc7a0053d6b3ba3496';  // Your real key here – no comments after if it causes issues; // Replace!
-  const url = `https://api.openweathermap.org/data/2.5/weather?q=Chicago,US&units=imperial&appid=${weatherKey}`;
-  try {
-    const res = await fetch('https://cors-anywhere.herokuapp.com/https://newsapi.org/v2/top-headlines?country=us&category=general&apiKey=08f6e8882a204261af7ef19be1f68aaa');;
-    const data = await res.json();
-    if (data.cod !== 200) throw new Error(data.message || 'Weather error');
 
-    headlinesDiv.innerHTML = `
-      <h2 style="color:#0f0; text-align:center;">Chicago Weer Nu</h2>
-      <p style="font-size:1.2em;"><strong>${Math.round(data.main.temp)}°F</strong> (voelt als ${Math.round(data.main.feels_like)}°F)</p>
-      <p>${data.weather[0].description.charAt(0).toUpperCase() + data.weather[0].description.slice(1)}</p>
-      <p>Wind: ${Math.round(data.wind.speed)} mph</p>
-      <p>Vochtigheid: ${data.main.humidity}%</p>
-      <p><small>Bron: OpenWeatherMap – Bijgewerkt: ${new Date().toLocaleTimeString('en-US')}</small></p>
-      <button onclick="showHeadlines()">← Back to mainpage</button>
-    `;
-  } catch (e) {
-    headlinesDiv.innerHTML = '<p style="color:red">Fout bij weer laden: ' + e.message + ' (Controleer API key of internet)</p>';
-  }
-}
-function loadCategory(mode) {
-  currentMode = mode;
-  document.getElementById('article').style.display = 'none';
-  document.getElementById('headlines').style.display = 'block';
-  loadNews(); // This now handles weather too
-}
+    async function loadWeather() {
+      const weatherKey = '06bfbf1ad774458bfc7a0053d6b3ba3496';
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=Chicago,US&units=imperial&appid=${weatherKey}`;
+
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.cod !== 200) {
+          throw new Error(data.message || 'Weather error');
+        }
+
+        headlinesDiv.innerHTML = `
+          <h2 style="color:#0f0; text-align:center;">Chicago Weer Nu</h2>
+          <p style="font-size:1.2em;"><strong>${Math.round(data.main.temp)}°F</strong> (voelt als ${Math.round(data.main.feels_like)}°F)</p>
+          <p>${data.weather[0].description.charAt(0).toUpperCase() + data.weather[0].description.slice(1)}</p>
+          <p>Wind: ${Math.round(data.wind.speed)} mph</p>
+          <p>Vochtigheid: ${data.main.humidity}%</p>
+          <p><small>Bron: OpenWeatherMap – Bijgewerkt: ${new Date().toLocaleTimeString('en-US')}</small></p>
+          <button onclick="showHeadlines()">← Back to mainpage</button>
+        `;
+      } catch (e) {
+        headlinesDiv.innerHTML = '<p style="color:red">Fout bij weer laden: ' + e.message + ' (Controleer API key of internet)</p>';
+      }
+    }
+
+    function loadCategory(mode) {
+      currentMode = mode;
+      document.getElementById('article').style.display = 'none';
+      document.getElementById('headlines').style.display = 'block';
+      loadNews();
+    }
 
     function showArticle(article) {
       document.getElementById('headlines').style.display = 'none';
@@ -140,11 +155,9 @@ function loadCategory(mode) {
       document.getElementById('headlines').style.display = 'block';
     }
 
-    // Load on start + every 15 min
+    // Start loading
     loadNews();
-    setInterval(() => loadNews(), 15 * 60 * 1000);
-    loadNews(); // Starts with US top headlines
-setInterval(loadNews, 15 * 60 * 1000); // Refresh every 15 min
+    setInterval(() => loadNews(), 15 * 60 * 1000); // Refresh every 15 min
   </script>
 </body>
 </html>
