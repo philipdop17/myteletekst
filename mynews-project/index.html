@@ -73,11 +73,11 @@
         } else if (currentMode === 'business') {
           url += '&category=business';
         } else {
-          url += '&category=general'; // default - usually returns more results
+          url += '&category=general'; // default - more reliable results
         }
 
-        // Use the working CORS proxy from robwu.nl
-        const proxyUrl = 'https://cors-anywhere.robwu.nl/' + url;
+        // Working CORS proxy
+        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(url);
         const res = await fetch(proxyUrl);
 
         if (!res.ok) {
