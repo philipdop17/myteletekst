@@ -111,7 +111,7 @@
       const url = `https://api.openweathermap.org/data/2.5/weather?q=Chicago,US&units=imperial&appid=${weatherKey}`;
 
       try {
-        const res = await fetch(url);
+        const res = await fetch(`/api/news?category=${currentMode === 'sports' ? 'sports' : currentMode === 'business' ? 'business' : 'general'}`);
         const data = await res.json();
 
         if (data.cod !== 200) {
